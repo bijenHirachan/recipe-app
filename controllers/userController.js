@@ -4,6 +4,8 @@ import { User } from "../models/User.js";
 import cloudinary from "cloudinary";
 import getDataUri from "../utils/dataUri.js";
 import { sendToken } from "../utils/sendToken.js";
+import { sendEmail } from "../utils/sendEmail.js";
+import crypto from "crypto";
 
 export const getUsers = catchAsyncErrors(async (req, res, next) => {
   const users = await User.find({});
@@ -11,6 +13,61 @@ export const getUsers = catchAsyncErrors(async (req, res, next) => {
   res.status(200).json({
     success: true,
     users,
+  });
+});
+
+export const forgotPassword = catchAsyncErrors(async (req, res, next) => {
+  const { email } = req.body;
+
+  const user = await User.findOne({ email });
+
+  if (!user) return next(new ErrorHandler("User Not Found", 404));
+
+  const resetToken = await user.getResetToken();
+
+  await user.save();
+
+  const url = `${process.env.FRONTEND_URL}/resetpassword/${resetToken}`;
+
+  const message = `Click on the link to reset your password. ${url}. If you haven't requested then please ignore.`;
+
+  await sendEmail(user.email, "FOOD WORLD | Reset Password", message);
+
+  res.status(200).json({
+    success: true,
+    message: `Reset token has been sent to ${user.email} successfully.`,
+  });
+});
+
+export const resetPassword = catchAsyncErrors(async (req, res, next) => {
+  const { token } = req.params;
+
+  const resetPasswordToken = crypto
+    .createHash("sha256")
+    .update(token)
+    .digest("hex");
+
+  const user = await User.findOne({
+    resetPasswordToken,
+    resetPasswordExpire: {
+      $gt: Date.now(),
+    },
+  });
+
+  if (!user)
+    return next(
+      new ErrorHandler("Reset Token is invalid or has been expired.", 404)
+    );
+
+  user.password = req.body.password;
+  user.resetPasswordToken = undefined;
+  user.resetPasswordExpire = undefined;
+
+  await user.save();
+
+  res.status(200).json({
+    success: true,
+    message: `Password reset successful.`,
   });
 });
 
