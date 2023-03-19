@@ -143,7 +143,7 @@ export const addStep = catchAsyncErrors(async (req, res, next) => {
 
   await recipe.save();
 
-  return res.status(200).json({
+  return res.status(201).json({
     success: true,
     message: "Step added successfully",
     recipe,
@@ -166,6 +166,8 @@ export const addSteps = catchAsyncErrors(async (req, res, next) => {
   await recipe.save();
 
   return res.status(200).json({
+    success: true,
+    message: "Steps added successfully",
     recipe,
   });
 });
@@ -186,6 +188,8 @@ export const addIngredients = catchAsyncErrors(async (req, res, next) => {
   await recipe.save();
 
   return res.status(200).json({
+    success: true,
+    message: "Ingredients added successfully",
     recipe,
   });
 });
@@ -204,6 +208,8 @@ export const addNewCategory = catchAsyncErrors(async (req, res, next) => {
   const newCategory = await Category.create({ name: transformedName });
 
   res.status(201).json({
+    success: true,
+    message: "Category created successfully",
     newCategory,
   });
 });
@@ -211,7 +217,7 @@ export const addNewCategory = catchAsyncErrors(async (req, res, next) => {
 export const getAllCategories = catchAsyncErrors(async (req, res, next) => {
   const categories = await Category.find();
 
-  res.status(201).json({
+  res.status(200).json({
     categories,
   });
 });
@@ -248,11 +254,12 @@ export const addCategoryToRecipe = catchAsyncErrors(async (req, res, next) => {
 
   await recipe.save();
 
-  return res.status(200).json({
+  return res.status(201).json({
     success: true,
     message: "Category added",
   });
 });
+
 export const addCategoriesToRecipe = catchAsyncErrors(
   async (req, res, next) => {
     const { id } = req.params;
